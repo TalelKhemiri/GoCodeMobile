@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // REPLACE '192.168.1.15' with your Computer's Local IP Address.
 // If using Android Emulator, you can use '10.0.2.2'.
 // If using a Real Phone, you MUST use your computer's IP (e.g., 192.168.1.XX).
-const IP_ADDRESS = 'Ip Address Of Server'; 
+const IP_ADDRESS = 'localhost'
 export const API_URL = `http://${IP_ADDRESS}:8000/api`;
 
 // ==============================================================================
