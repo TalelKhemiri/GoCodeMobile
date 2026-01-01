@@ -2,7 +2,7 @@
 
 export interface Question {
   id: number;
-  image?: any; // Changé en 'any' pour accepter les require() ou les URI
+  image?: any; // 'any' permet d'accepter le require()
   question: string;
   options: string[];
   correctAnswer: number;
@@ -26,11 +26,8 @@ export const QUIZ_DATA: QuizModule[] = [
     questions: [
       {
         id: 11,
-        // Pour une image locale, utilise require :
-        // image: require('../assets/priority/rout11.png'),
-        
-        // Pour l'instant, je mets une image internet pour que ça marche direct :
-        image: "https://images.unsplash.com/photo-1566579092497-6a9c227d8e62?q=80&w=1000&auto=format&fit=crop",
+        // ⚠️ Vérifie si c'est bien route1.png qui correspond à cette question
+        image: require('../assets/images/quiz/rout1.png'), 
         question: "Dans quel ordre les véhicules passent-ils ?",
         options: ["Voiture Rouge, puis Bleue", "Voiture Bleue, puis Rouge", "Les deux en même temps"],
         correctAnswer: 0,
@@ -38,7 +35,8 @@ export const QUIZ_DATA: QuizModule[] = [
       },
       {
         id: 12,
-        image: "https://images.unsplash.com/photo-1562142289-5435b8042456?q=80&w=1000&auto=format&fit=crop",
+        // Exemple : route2.png pour le stop
+        image: require('../assets/images/quiz/rout2.png'),
         question: "Que signifie ce panneau ?",
         options: ["Céder le passage", "Arrêt absolu (STOP)", "Ralentir"],
         correctAnswer: 1,
@@ -54,7 +52,8 @@ export const QUIZ_DATA: QuizModule[] = [
     questions: [
       {
         id: 21,
-        image: "https://images.unsplash.com/photo-1625244503713-332306c59600?q=80&w=1000&auto=format&fit=crop",
+        // Exemple : route3.png
+        image: require('../assets/images/quiz/rout3.png'),
         question: "Le dépassement est-il autorisé ?",
         options: ["Oui", "Non", "Seulement pour les motos"],
         correctAnswer: 1,
@@ -70,7 +69,8 @@ export const QUIZ_DATA: QuizModule[] = [
     questions: [
       {
         id: 30,
-        image: "https://plus.unsplash.com/premium_photo-1661596707328-97cb002c9183?q=80&w=1000&auto=format&fit=crop",
+        // Exemple : route4.png
+        image: require('../assets/images/quiz/rout4.png'),
         question: "Première action sur un accident ?",
         options: ["Alerter", "Secourir", "Protéger (Baliser)"],
         correctAnswer: 2,

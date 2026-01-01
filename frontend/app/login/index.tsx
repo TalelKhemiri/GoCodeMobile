@@ -2,15 +2,13 @@ import React, { useState } from 'react';
 import { 
   View, Text, TextInput, TouchableOpacity, StyleSheet, 
   Image, ActivityIndicator, KeyboardAvoidingView, 
-  Platform, ScrollView, Dimensions 
+  Platform, ScrollView, useWindowDimensions // <--- 1. On change l'import
 } from 'react-native';
 import { useRouter, Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { User, Lock, ArrowRight, CheckSquare, Square } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from '../../api'; 
-
-const { width, height } = Dimensions.get('window');
 
 const COLORS = {
   sky: '#A4D7E1',
@@ -22,6 +20,9 @@ const COLORS = {
 
 export default function Login() {
   const router = useRouter();
+  // 2. On récupère les dimensions ICI pour qu'elles soient dynamiques
+  const { width, height } = useWindowDimensions(); 
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -41,7 +42,7 @@ export default function Login() {
       await AsyncStorage.setItem("user", data.username);
       await AsyncStorage.setItem("role", data.role);
       router.replace('/'); 
-    } catch (err: any) {
+    } catch (err) {
       setError("Identifiants incorrects.");
     } finally {
       setLoading(false);
@@ -50,20 +51,18 @@ export default function Login() {
 
   return (
     <View style={{ flex: 1 }}>
-      {/* 1. L'IMAGE DE FOND FIXE (Ne bouge pas) */}
+      {/* Fond d'écran qui s'adapte à 100% de la taille dispo */}
       <Image 
         source={{ uri: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop' }}
-        style={[StyleSheet.absoluteFillObject, { width: width, height: height }]}
+        style={[StyleSheet.absoluteFillObject, { width: '100%', height: '100%' }]}
         resizeMode="cover"
       />
 
-      {/* 2. LE DÉGRADÉ FIXE (Ne bouge pas) */}
       <LinearGradient 
         colors={['rgba(44, 62, 80, 0.85)', 'rgba(44, 62, 80, 0.7)']} 
-        style={[StyleSheet.absoluteFillObject, { width: width, height: height }]}
+        style={[StyleSheet.absoluteFillObject, { width: '100%', height: '100%' }]}
       />
 
-      {/* 3. LE CONTENU QUI SCROLLE (Par-dessus le fond) */}
       <KeyboardAvoidingView 
         behavior={Platform.OS === "ios" ? "padding" : "height"} 
         style={{ flex: 1 }}
@@ -74,7 +73,8 @@ export default function Login() {
           keyboardShouldPersistTaps="handled"
         >
           
-          <View style={styles.card}>
+          {/* 3. La carte utilise maintenant un style responsive (maxWidth) */}
+          <View style={[styles.card, { width: width > 500 ? 400 : '90%' }]}>
             <View style={styles.cardHeader}>
               <Text style={styles.title}>Bienvenue</Text>
               <Text style={styles.subtitle}>En route vers le succès</Text>
@@ -129,11 +129,19 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  // Plus besoin de styles pour backgroundImage ici car on utilise absoluteFillObject inline
-  scrollContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 20 },
+  scrollContent: { 
+    flexGrow: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    paddingVertical: 20,
+    width: '100%' // Assure que le scrollview prend toute la largeur
+  },
   
   card: {
-    width: width * 0.9, 
+    // Note: La width est gérée dynamiquement dans le style inline du composant
+    // Mais on garde un maxWidth pour que sur PC ça ne soit pas géant
+    maxWidth: 450, 
+    alignSelf: 'center', // Centre la carte
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     borderRadius: 20,
     paddingVertical: 25,
@@ -155,7 +163,7 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: 'rgba(240, 244, 248, 0.9)', borderRadius: 25,
     paddingVertical: 10, paddingLeft: 50, paddingRight: 15,
-    fontSize: 15, color: COLORS.dark, height: 48,
+    fontSize: 15, color: COLORS.dark, height: 48, width: '100%' // width 100% important
   },
 
   optionsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, width: '100%' },

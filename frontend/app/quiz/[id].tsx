@@ -5,9 +5,11 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle, XCircle, ArrowRight, RotateCcw, LayoutDashboard, Flag, AlertCircle } from 'lucide-react-native';
+
+// Assure-toi que ce chemin est correct selon ta structure de dossiers
 import { QUIZ_DATA } from '../../data/QuizData'; 
 
-// Couleurs
+// --- COULEURS ---
 const COLORS = {
   dark: '#2C3E50',
   sky: '#A4D7E1',
@@ -21,24 +23,40 @@ export default function QuizPlayer() {
   const router = useRouter();
 
   const [module, setModule] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // État du Quiz
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isChecked, setIsChecked] = useState(false);
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
 
+  // Chargement des données
   useEffect(() => {
     const found = QUIZ_DATA.find((m) => m.id === id);
     if (found) {
       setModule(found);
+      setLoading(false);
+    } else {
+      Alert.alert("Erreur", "Module introuvable", [
+        { text: "Retour", onPress: () => router.back() }
+      ]);
     }
   }, [id]);
 
-  if (!module) return <View style={styles.center}><ActivityIndicator size="large" color={COLORS.dark} /></View>;
+  if (loading || !module) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={COLORS.dark} />
+      </View>
+    );
+  }
 
-  // Logique
+  // --- LOGIQUE ---
   const handleValidate = () => {
     if (selectedOption === null) return;
+    
     setIsChecked(true);
     if (selectedOption === module.questions[currentStep].correctAnswer) {
       setScore(s => s + 1);
@@ -56,7 +74,11 @@ export default function QuizPlayer() {
   };
 
   const restartQuiz = () => {
-    setCurrentStep(0); setScore(0); setShowResult(false); setIsChecked(false); setSelectedOption(null);
+    setCurrentStep(0); 
+    setScore(0); 
+    setShowResult(false); 
+    setIsChecked(false); 
+    setSelectedOption(null);
   };
 
   // --- VUE RÉSULTATS ---
@@ -96,109 +118,118 @@ export default function QuizPlayer() {
 
   return (
     <LinearGradient colors={['#f5f7fa', '#c3cfe2']} style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
-        {/* Header & Progress */}
-        <View style={styles.header}>
-          <View style={styles.metaRow}>
-            <Text style={styles.moduleTag}>{module.title}</Text>
-            <Text style={styles.stepText}>Q. {currentStep + 1} / {module.questions.length}</Text>
-          </View>
-          <View style={styles.progressBarBg}>
-            <LinearGradient 
-              colors={[COLORS.sky, '#2980b9']} 
-              start={{x:0, y:0}} end={{x:1, y:0}}
-              style={[styles.progressBarFill, { width: `${progressPercent}%` }]} 
-            />
-          </View>
-        </View>
-
-        {/* Card Question */}
-        <View style={styles.card}>
+      
+      {/* ScrollView pour le contenu (Header + Question + Feedback) */}
+      <View style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
-          {/* Image */}
-          {question.image ? (
-            <View style={styles.imageContainer}>
-              <Image source={{ uri: question.image }} style={styles.questionImage} resizeMode="cover" />
+          {/* Header & Progress */}
+          <View style={styles.header}>
+            <View style={styles.metaRow}>
+              <Text style={styles.moduleTag}>{module.title}</Text>
+              <Text style={styles.stepText}>Q. {currentStep + 1} / {module.questions.length}</Text>
             </View>
-          ) : null}
+            <View style={styles.progressBarBg}>
+              <LinearGradient 
+                colors={[COLORS.sky, '#2980b9']} 
+                start={{x:0, y:0}} end={{x:1, y:0}}
+                style={[styles.progressBarFill, { width: `${progressPercent}%` }]} 
+              />
+            </View>
+          </View>
 
-          <Text style={styles.questionText}>{question.question}</Text>
+          {/* Carte Question */}
+          <View style={styles.card}>
+            
+            {/* --- CORRECTION IMAGE ICI --- */}
+            {/* Utilisation de 'source={question.image}' direct pour fonctionner avec require() */}
+            {question.image ? (
+              <View style={styles.imageContainer}>
+                <Image 
+                  source={question.image} 
+                  style={styles.questionImage} 
+                  resizeMode="contain" // 'contain' évite de couper l'image
+                />
+              </View>
+            ) : null}
 
-          {/* Options */}
-          <View style={styles.optionsList}>
-            {question.options.map((opt: string, idx: number) => {
-              
-              // Styles dynamiques
-              let btnStyle = styles.optionBtn;
-              let textStyle = styles.optionText;
-              let icon = null;
+            <Text style={styles.questionText}>{question.question}</Text>
 
-              if (isChecked) {
-                if (idx === question.correctAnswer) {
-                  btnStyle = { ...styles.optionBtn, backgroundColor: COLORS.greenBg, borderColor: COLORS.greenBorder };
-                  textStyle = { ...styles.optionText, color: COLORS.greenText };
-                  icon = <CheckCircle size={20} color={COLORS.greenText} />;
-                } else if (idx === selectedOption) {
-                  btnStyle = { ...styles.optionBtn, backgroundColor: COLORS.redBg, borderColor: COLORS.redBorder };
-                  textStyle = { ...styles.optionText, color: COLORS.redText };
-                  icon = <XCircle size={20} color={COLORS.redText} />;
+            {/* Options */}
+            <View style={styles.optionsList}>
+              {question.options.map((opt: string, idx: number) => {
+                let btnStyle = styles.optionBtn;
+                let textStyle = styles.optionText;
+                let icon = null;
+
+                if (isChecked) {
+                  if (idx === question.correctAnswer) {
+                    btnStyle = { ...styles.optionBtn, backgroundColor: COLORS.greenBg, borderColor: COLORS.greenBorder };
+                    textStyle = { ...styles.optionText, color: COLORS.greenText };
+                    icon = <CheckCircle size={20} color={COLORS.greenText} />;
+                  } else if (idx === selectedOption) {
+                    btnStyle = { ...styles.optionBtn, backgroundColor: COLORS.redBg, borderColor: COLORS.redBorder };
+                    textStyle = { ...styles.optionText, color: COLORS.redText };
+                    icon = <XCircle size={20} color={COLORS.redText} />;
+                  }
+                } else if (selectedOption === idx) {
+                  btnStyle = { ...styles.optionBtn, backgroundColor: COLORS.blueBg, borderColor: COLORS.blueBorder };
+                  textStyle = { ...styles.optionText, color: COLORS.blueBorder };
                 }
-              } else if (selectedOption === idx) {
-                btnStyle = { ...styles.optionBtn, backgroundColor: COLORS.blueBg, borderColor: COLORS.blueBorder };
-                textStyle = { ...styles.optionText, color: COLORS.blueBorder };
-              }
 
-              return (
-                <TouchableOpacity 
-                  key={idx} 
-                  style={btnStyle} 
-                  onPress={() => !isChecked && setSelectedOption(idx)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={textStyle}>{opt}</Text>
-                  {icon}
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {/* Feedback Box */}
-          {isChecked && (
-            <View style={[styles.feedbackBox, selectedOption === question.correctAnswer ? styles.feedSuccess : styles.feedError]}>
-               <View style={styles.feedHeader}>
-                 {selectedOption === question.correctAnswer ? <CheckCircle size={18} color={COLORS.greenText}/> : <AlertCircle size={18} color={COLORS.redText}/>}
-                 <Text style={[styles.feedTitle, { color: selectedOption === question.correctAnswer ? COLORS.greenText : COLORS.redText }]}>
-                   {selectedOption === question.correctAnswer ? "Bonne réponse !" : "Mauvaise réponse"}
-                 </Text>
-               </View>
-               <Text style={styles.feedText}>{question.explanation}</Text>
+                return (
+                  <TouchableOpacity 
+                    key={idx} 
+                    style={btnStyle} 
+                    onPress={() => !isChecked && setSelectedOption(idx)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={textStyle}>{opt}</Text>
+                    {icon}
+                  </TouchableOpacity>
+                );
+              })}
             </View>
-          )}
 
-          {/* Footer Action */}
-          <View style={styles.footer}>
-            {!isChecked ? (
-              <TouchableOpacity 
-                style={[styles.mainBtn, selectedOption === null && styles.disabledBtn]} 
-                onPress={handleValidate}
-                disabled={selectedOption === null}
-              >
-                <Text style={styles.mainBtnText}>Valider</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity style={styles.mainBtn} onPress={handleNext}>
-                <Text style={styles.mainBtnText}>
-                  {currentStep < module.questions.length - 1 ? "Suivant" : "Résultats"}
-                </Text>
-                {currentStep < module.questions.length - 1 ? <ArrowRight size={20} color="#fff" /> : <Flag size={20} color="#fff" />}
-              </TouchableOpacity>
+            {/* Feedback Box (Apparaît après validation) */}
+            {isChecked && (
+              <View style={[styles.feedbackBox, selectedOption === question.correctAnswer ? styles.feedSuccess : styles.feedError]}>
+                 <View style={styles.feedHeader}>
+                   {selectedOption === question.correctAnswer ? <CheckCircle size={18} color={COLORS.greenText}/> : <AlertCircle size={18} color={COLORS.redText}/>}
+                   <Text style={[styles.feedTitle, { color: selectedOption === question.correctAnswer ? COLORS.greenText : COLORS.redText }]}>
+                     {selectedOption === question.correctAnswer ? "Bonne réponse !" : "Mauvaise réponse"}
+                   </Text>
+                 </View>
+                 <Text style={styles.feedText}>{question.explanation}</Text>
+              </View>
             )}
+            
           </View>
+          {/* Espace vide pour ne pas cacher le dernier élément sous le bouton fixe */}
+          <View style={{ height: 100 }} /> 
+        </ScrollView>
+      </View>
 
-        </View>
+      {/* --- BOUTON FOOTER FIXE --- */}
+      <View style={styles.stickyFooter}>
+        {!isChecked ? (
+          <TouchableOpacity 
+            style={[styles.mainBtn, selectedOption === null && styles.disabledBtn]} 
+            onPress={handleValidate}
+            disabled={selectedOption === null}
+          >
+            <Text style={styles.mainBtnText}>Valider</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.mainBtn} onPress={handleNext}>
+            <Text style={styles.mainBtnText}>
+              {currentStep < module.questions.length - 1 ? "Suivant" : "Résultats"}
+            </Text>
+            {currentStep < module.questions.length - 1 ? <ArrowRight size={20} color="#fff" /> : <Flag size={20} color="#fff" />}
+          </TouchableOpacity>
+        )}
+      </View>
 
-      </ScrollView>
     </LinearGradient>
   );
 }
@@ -206,7 +237,7 @@ export default function QuizPlayer() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scrollContent: { padding: 20, paddingTop: 60, paddingBottom: 40 },
+  scrollContent: { padding: 20, paddingTop: 60, paddingBottom: 20 },
 
   // Header
   header: { marginBottom: 20 },
@@ -222,9 +253,10 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20, elevation: 8,
   },
   
-  // Question
-  imageContainer: { width: '100%', height: 180, borderRadius: 16, overflow: 'hidden', marginBottom: 20, borderWidth: 1, borderColor: '#eee' },
+  // Image (Ajusté pour être joli)
+  imageContainer: { width: '100%', height: 200, marginBottom: 20, borderRadius: 12, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   questionImage: { width: '100%', height: '100%' },
+
   questionText: { fontSize: 20, fontWeight: '700', color: COLORS.dark, marginBottom: 25, lineHeight: 28 },
 
   // Options
@@ -243,8 +275,23 @@ const styles = StyleSheet.create({
   feedTitle: { fontWeight: '700', fontSize: 14 },
   feedText: { fontSize: 13, color: COLORS.dark },
 
-  // Footer Button
-  footer: { paddingTop: 10, borderTopWidth: 1, borderTopColor: '#f0f0f0' },
+  // STICKY FOOTER (Le bouton qui flotte en bas)
+  stickyFooter: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    padding: 20,
+    paddingBottom: 30, // Espace pour les iPhone récents (barre blanche en bas)
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 10,
+  },
   mainBtn: {
     backgroundColor: COLORS.dark, paddingVertical: 15, borderRadius: 12,
     flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10,
@@ -253,7 +300,7 @@ const styles = StyleSheet.create({
   disabledBtn: { opacity: 0.5 },
   mainBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 
-  // Results View specific
+  // Results View
   resultCard: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40, marginTop: 40 },
   resultTitle: { fontSize: 28, fontWeight: '800', color: COLORS.dark, marginTop: 20, marginBottom: 5 },
   resultSub: { fontSize: 16, color: '#7f8c8d', textAlign: 'center', marginBottom: 20 },
