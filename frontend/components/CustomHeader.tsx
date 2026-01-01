@@ -1,25 +1,25 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, Platform, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
 import { Link, useRouter, usePathname } from 'expo-router';
-// AJOUT : J'ai importé "BookOpen" pour l'icône du Quiz
-import { Car, User, LogOut, Home, Mail, Info, BookOpen } from 'lucide-react-native';
+import { 
+  Car, LogOut, Home, Mail, Info, BookOpen, BarChart2, GraduationCap 
+} from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { styles } from '../constants/styles';
 
 interface HeaderProps {
   user: string | null;
   setUser: (u: string | null) => void;
+  role?: string | null; // Added role prop
 }
 
-const CustomHeader = ({ user, setUser }: HeaderProps) => {
+const CustomHeader = ({ user, setUser, role }: HeaderProps) => {
   const router = useRouter();
-  const pathname = usePathname(); // To highlight active link
+  const pathname = usePathname(); 
 
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem("user");
-      await AsyncStorage.removeItem("role");
-      await AsyncStorage.removeItem("accessToken");
+      await AsyncStorage.multiRemove(["user", "role", "accessToken"]);
       setUser(null);
       router.replace("/");
     } catch (e) {
@@ -27,7 +27,6 @@ const CustomHeader = ({ user, setUser }: HeaderProps) => {
     }
   };
 
-  // Petite aide pour vérifier si le lien est actif (y compris les sous-pages du quiz)
   const isActive = (path: string) => pathname === path || (path !== '/' && pathname.startsWith(path));
 
   return (
@@ -42,7 +41,7 @@ const CustomHeader = ({ user, setUser }: HeaderProps) => {
           </TouchableOpacity>
         </Link>
 
-        {/* RIGHT: Auth Buttons or User Profile */}
+        {/* RIGHT: Auth Buttons */}
         <View style={styles.authContainer}>
           {user ? (
             <View style={styles.userProfileContainer}>
@@ -73,6 +72,7 @@ const CustomHeader = ({ user, setUser }: HeaderProps) => {
       {/* === ROW 2: NAVIGATION LINKS === */}
       <View style={styles.navRow}>
         
+        {/* 1. HOME (Always visible) */}
         <Link href="/" asChild>
           <TouchableOpacity style={styles.navLink}>
             <Home size={16} color={isActive('/') ? '#2C3E50' : '#94a3b8'} />
@@ -80,15 +80,36 @@ const CustomHeader = ({ user, setUser }: HeaderProps) => {
           </TouchableOpacity>
         </Link>
 
-        {/* --- NOUVEAU BOUTON QUIZ --- */}
+        {/* 2. DYNAMIC LINKS (Based on Role) */}
+        
+        {/* IF MONITOR -> Go to /monitordashboard */}
+        {role === 'monitor' && (
+          <Link href="/monitordashboard" asChild>
+            <TouchableOpacity style={styles.navLink}>
+              <BarChart2 size={16} color={isActive('/monitordashboard') ? '#2C3E50' : '#94a3b8'} />
+              <Text style={[styles.navLinkText, isActive('/monitordashboard') && styles.navLinkActive]}>Dashboard</Text>
+            </TouchableOpacity>
+          </Link>
+        )}
+
+        {/* IF STUDENT -> Go to /mylearning */}
+        {role === 'student' && (
+          <Link href="/mylearning" asChild>
+            <TouchableOpacity style={styles.navLink}>
+              <GraduationCap size={16} color={isActive('/mylearning') ? '#2C3E50' : '#94a3b8'} />
+              <Text style={[styles.navLinkText, isActive('/mylearning') && styles.navLinkActive]}>Mes Cours</Text>
+            </TouchableOpacity>
+          </Link>
+        )}
+
+        {/* 3. YOUR OTHER ORIGINAL LINKS */}
+
         <Link href="/quiz" asChild>
           <TouchableOpacity style={styles.navLink}>
-            {/* Si on est sur le quiz, l'icône devient foncée, sinon grise */}
             <BookOpen size={16} color={isActive('/quiz') ? '#2C3E50' : '#94a3b8'} />
             <Text style={[styles.navLinkText, isActive('/quiz') && styles.navLinkActive]}>Quiz</Text>
           </TouchableOpacity>
         </Link>
-        {/* --------------------------- */}
 
         <Link href="/contact" asChild>
           <TouchableOpacity style={styles.navLink}>
