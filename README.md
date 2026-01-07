@@ -2,7 +2,7 @@
 
 **A comprehensive full-stack mobile learning platform** that empowers instructors to create and manage courses while enabling students to learn, track progress, and assess knowledge through interactive quizzes.
 
-> Built as a college capstone project combining modern backend (Django) and mobile-first frontend (Expo) technologies.
+> Built as a college capstone project combining modern backend (Django) and mobile-first frontend (Expo (React Native)) technologies.
 
 ---
 
